@@ -1,4 +1,4 @@
-
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -97,6 +97,7 @@ body.dark .cat-chip{ background:rgba(35,34,42,0.9); color:#ffd7e6; }
 
 .heart{ appearance:none; background:transparent; border:0; cursor:pointer; font-size:20px; line-height:1; }
 .heart.fav{ color:var(--danger); }
+
 .open-btn{ margin:8px 14px 14px; padding:10px 12px; border-radius:12px; background:var(--brand); color:#fff; border:0; cursor:pointer; font-weight:700; }
 
 /* Drawer Menu */
@@ -197,7 +198,9 @@ body.dark .btn.secondary{ color:#ffd7e6; }
   <button class="tab" data-cat="เค้ก">เค้ก</button>
   <button class="tab" data-cat="คุกกี้">คุกกี้</button>
   <button class="tab" data-cat="น้ำปั่น">น้ำปั่น</button>
-</nav>  </header>  <!-- Main -->  <main class="container">
+</nav>
+
+  </header>  <!-- Main -->  <main class="container">
     <div id="grid" class="grid" aria-live="polite"></div>
     <div id="empty" class="empty" style="display:none;">ไม่พบสูตรตามเงื่อนไขที่เลือก</div>
   </main>  <!-- Modal: ดูรายละเอียดสูตร -->  <div class="modal" id="viewModal" aria-hidden="true">
@@ -294,7 +297,8 @@ body.dark .btn.secondary{ color:#ffd7e6; }
     const catTH = ['ไอศกรีม','เค้ก','คุกกี้','น้ำปั่น'];
 
     function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
-  function toBase64(file){
+
+    function toBase64(file){
       return new Promise((resolve,reject)=>{
         const fr = new FileReader();
         fr.onload = () => resolve(fr.result);
@@ -324,7 +328,7 @@ body.dark .btn.secondary{ color:#ffd7e6; }
      * image เก็บเป็น dataURL สำหรับความทนทาน
      */
 
-    const seed = () => {
+       const seed = () => {
       const demoImg = (txt) => `https://dummyimage.com/800x500/ffc2d6/7f2d47.jpg&text=${encodeURIComponent(txt)}`;
       const YT = (id) => `https://www.youtube.com/watch?v=${id}`;
       const list = [];
@@ -355,6 +359,7 @@ body.dark .btn.secondary{ color:#ffd7e6; }
       return list.map(r=>({...r, image:r.image }));
     };
 
+
 function loadRecipes(){
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw){ try{ return JSON.parse(raw); }catch{ return []; } }
@@ -384,22 +389,25 @@ function loadRecipes(){
 
     function initials(name){ return (name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 
-    function cardTemplate(r){
-      const isFav = favs.has(r.id);
-      return `
-        <article class="card" data-id="${r.id}">
-          <div class="thumb">
-            <img loading="lazy" src="${r.image}" alt="${r.title}">
-            <span class="cat-ch            <div class="info">
-              <h3 class="name">${r.title}</h3>
-              <div class="by">โดย ${r.author}</div>
-            </div>
-            <button class="heart ${isFav?'fav':''}" title="กดหัวใจ" data-like>❤</button>
-          </div>
-          <button class="open-btn" data-open>ดูสูตรนี้</button>
-        </article>
-      `;
-    }
+   function cardTemplate(r){
+  const isFav = favs.has(r.id);
+  return `
+    <article class="card" data-id="${r.id}">
+      <div class="thumb">
+        <img loading="lazy" src="${r.image}" alt="${r.title}" data-open="${r.id}">
+        <span class="cat-chip">${r.category}</span>
+      </div>
+      <div class="card-body">
+        <div class="avatar">${initials(r.author)}</div>
+        <div class="info">
+          <h3 class="name">${r.title}</h3>
+          <div class="by">โดย ${r.author}</div>
+        </div>
+        <button class="heart ${isFav?'fav':''}" title="กดหัวใจ" data-like>❤</button>
+      </div>
+    </article>
+  `;
+}
 
     function render(){
       let list = recipes.slice();
@@ -490,7 +498,9 @@ function loadRecipes(){
       if(videoFile && videoFile.size){
         // ไม่เก็บถาวรใน localStorage แต่เล่นในรอบนี้ได้
         rec._videoObjectUrl = URL.createObjectURL(videoFile);
-      }      recipes.unshift(rec);
+      }
+
+      recipes.unshift(rec);
       saveRecipes();
       render();
       closeAdd();
@@ -528,21 +538,29 @@ function loadRecipes(){
     });
 
     // คลิกในกริด: like / open
-    grid.addEventListener('click', (e)=>{
-      const likeBtn = e.target.closest('[data-like]');
-      const openBtn = e.target.closest('[data-open]');
-      const card = e.target.closest('.card');
-      if(!card) return;
-      const id = card.dataset.id;
+   grid.addEventListener('click', (e) => {
+  const likeBtn = e.target.closest('[data-like]');
+  const img = e.target.closest('img'); // <-- เปลี่ยนจาก data-open
+  const card = e.target.closest('.card');
+  if (!card) return;
 
-      if(likeBtn){
-        if(favs.has(id)) favs.delete(id); else favs.add(id);
-        saveFavs();
-        render();
-        return;
-      }
-      if(openBtn){ openView(id); return; }
-    });
+  const id = card.dataset.id;
+
+  // กดหัวใจ
+  if (likeBtn) {
+    if (favs.has(id)) favs.delete(id);
+    else favs.add(id);
+    saveFavs();
+    render();
+    return;
+  }
+
+  // กดรูป
+  if (img) {
+    openView(id);
+    return;
+  }
+});
 
     // ปิดโมดอล
     viewModal.addEventListener('click', (e)=>{ if(e.target.hasAttribute('data-close-modal')) closeView(); });
